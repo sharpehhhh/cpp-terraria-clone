@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,9 +17,15 @@ else()
 	add_compile_options(-mavx2 -mfma) # make sure SIMD optimizations take place, but on linux and other platforms
 endif()
 
-
+# Raylib built as a static library
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 
 project(mygame)
+
+#add libraries here
+add_subdirectory(libraries/raylib-6.0)
+add_subdirectory(libraries/imgui-docking)
+add_subdirectory(libraries/rlimgui)
 
 
 
@@ -75,6 +81,9 @@ endif()
 
 
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
+# link libraries statically here
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE raylib_static imgui rlimgui)
 
 
 
