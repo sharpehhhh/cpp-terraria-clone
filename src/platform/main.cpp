@@ -3,11 +3,20 @@
 #include <imgui.h>
 #include <rlImGui.h>
 
+#include "imguiThemes.h"
+#include "gameMain.h"
+
 int main()
 {
-	
+
+#if PRODUCTION_BUILD == 1
+	SetTraceLogLevel(LOG_NONE);
+#endif
+
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(800, 600, "Hello Raylib");
+	SetExitKey(KEY_NULL);
+	SetTargetFPS(500);
 	
 #pragma region imgui
 	rlImGuiSetup(true);
@@ -15,13 +24,19 @@ int main()
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.FontGlobalScale = 2;
+
+	setup_catppuccin_mocha_theme();
 #pragma endregion
-	
+
+	if (!initGame())
+	{
+		return 0;
+	}
 
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
+		ClearBackground(BLACK);
 
 #pragma region imgui
 		rlImGuiBegin();
@@ -32,33 +47,26 @@ int main()
 		ImGui::PopStyleColor(2);
 #pragma endregion
 
-		DrawText("First Window", 200, 200, 20, BLACK);
-
-		DrawRectangle(50, 50, 200, 100, {255, 0, 0, 127});
-		DrawRectangle(60, 60, 200, 100, {0, 255, 0, 127});
-
 #pragma region imgui windows
-		ImGui::Begin("First Window");
+		ImGui::Begin("Styles");
 
-		ImGui::Text("Hello");
+		ImGui::Text("Change styles here: ");
 
-		if (ImGui::Button("Button"))
+		if (ImGui::Button("Cat Style"))
 		{
-			std::cout << "Pressed button.\n";
+			setup_catppuccin_mocha_theme();
+			std::cout << "Using cat style.\n";
 		}
 
 		ImGui::SameLine();
 
-		if (ImGui::Button("Button2"))
+		if (ImGui::Button("Reset to Dark Style"))
 		{
-			std::cout << "Pressed second button.\n";
+			ImGui::StyleColorsDark();
+			std::cout << "reset to dark Style.\n";
 		}
 
-		ImGui::ShowDemoWindow();
-
 		ImGui::End();
-
-
 
 		// Second Window
 		ImGui::Begin("Second Window");
@@ -73,19 +81,29 @@ int main()
 		ImGui::End();
 #pragma endregion
 
+		ImGui::Begin("Test Window");
+
+		ImGui::End();
+
+		if (!updateGame())
+		{
+			CloseWindow();
+		}
+
 #pragma region imgui
 		rlImGuiEnd();
 #pragma endregion
-
-
 		EndDrawing();
 	}
+
+	closeGame();
+
+	CloseWindow();
 
 #pragma region imgui
 	rlImGuiShutdown();
 #pragma endregion
 
-	CloseWindow();
 
 	return 0;
 }
