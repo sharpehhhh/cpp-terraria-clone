@@ -2,49 +2,71 @@
 #include <raylib.h>
 #include <fstream>
 #include "gameMain.h"
+#include "gameMap.h"
+#include "assetManager.h"
 
 struct GameData
 {
+	GameMap gameMap{};
+}gameData{};
 
-	float positionX = 100.0f;
-	float positionY = 100.0f;
+namespace 
+{
+	AssetManager assetManager{};
+}
 
-}gameData;
 
 bool initGame()
 {
-	// reset game state
-	gameData = {}; 
+	assetManager.loadAll();
+
+	gameData.gameMap.create(30, 10);
+
+	gameData.gameMap.getBlockUnSafe(0, 0).type = Block::dirt;
+	gameData.gameMap.getBlockUnSafe(1, 1).type = Block::dirt;
+	gameData.gameMap.getBlockUnSafe(2, 2).type = Block::dirt;
+	gameData.gameMap.getBlockUnSafe(3, 3).type = Block::dirt;
+	gameData.gameMap.getBlockUnSafe(4, 4).type = Block::dirt;
 
 	return true;
 }
 
 bool updateGame()
 {
-	Color c;
-	c.r = 255;
-	c.g = 0;
-	c.b = 0;
-	c.a = 255;
+	float deltaTime { GetFrameTime() };
 
-	float deltaTime = GetFrameTime();
-	if (deltaTime > 1.0f / 5) { deltaTime = 1 / 5.0f; }
+	if (deltaTime > 1.0f / 5) 
+	{ 
+		deltaTime = 1 / 5.0f; 
+	}
 
-	if (IsKeyDown(KEY_A)) { gameData.positionX -= 500.0f * deltaTime; }
-	if (IsKeyDown(KEY_D)) { gameData.positionX += 500.0f * deltaTime; }
-	if (IsKeyDown(KEY_W)) { gameData.positionY -= 500.0f * deltaTime; }
-	if (IsKeyDown(KEY_S)) { gameData.positionY += 500.0f * deltaTime; }
+	ClearBackground({ 75, 75, 150, 255 });
 
-	DrawRectangle(gameData.positionX, gameData.positionY, 50.0f, 50.0f, c);
+	for (int y = 0; y < gameData.gameMap.height; ++y)
+	{
+		for (int x = 0; x < gameData.gameMap.width; ++x)
+		{
+			auto& block = gameData.gameMap.getBlockUnSafe(x, y);
+
+			if (block.type != Block::air)
+			{
+				float size{ 32.0f };
+				float posX{ x * size };
+				float posY{ y * size };
+
+				DrawTexturePro(assetManager.dirt, 
+					Rectangle{ 0.f, 0.f, (float) assetManager.dirt.width, (float) assetManager.dirt.height },
+					{ posX, posY, size, size },	// destination
+					{0, 0},						// origin (coordinates)
+					0.f,						// rotation
+					WHITE);						// tint
+			}
+		}
+	}
 
 	return true;
 }
 
 void closeGame()
 {
-	std::cout << "Closing game" << '\n';
-
-	std::ofstream f(RESOURCES_PATH "f.txt");
-	f << "Game closed.\n";
-	f.close();
 }
