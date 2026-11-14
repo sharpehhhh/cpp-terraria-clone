@@ -59,6 +59,7 @@ struct Block
 		boneWordrobe,
 		boneBookShelf,
 		bonePlatform,
+		brickBlock,
 
 		BLOCKS_COUNT,
 	};

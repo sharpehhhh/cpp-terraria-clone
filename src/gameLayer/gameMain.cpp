@@ -1,16 +1,22 @@
 #include <iostream>
 #include <raylib.h>
 #include <fstream>
+#include <imgui.h>
+#include <rlImGui.h>
 #include "gameMain.h"
 #include "gameMap.h"
 #include "assetManager.h"
 #include "helpers.h"
 
+
 struct GameData
 {
 	GameMap gameMap{};
 	Camera2D camera{};
+
+	int selectedBlockType{ 0 };
 }gameData{};
+
 
 namespace 
 {
@@ -30,7 +36,7 @@ bool initGame()
 		for (int x = 0; x < gameData.gameMap.width; x++)
 		{
 			float s = (std::sin(x) + 0.2f) / 2.0f;
-			float s2 = (std::sin(x * 0.5) + 1.0f) / 2.0f;
+			float s2 = (std::sin(x * 0.5f) + 1.0f) / 2.0f;
 
 			if (gameData.gameMap.height - (gameData.gameMap.height * 0.3 * s) - gameData.gameMap.height * 0.5 * s2 < y)
 			{
@@ -44,7 +50,6 @@ bool initGame()
 			{
 				gameData.gameMap.getBlockUnSafe(x, y).type = Block::air;
 			}
-
  		}
 	}
 
@@ -76,6 +81,37 @@ bool updateGame()
 	if (IsKeyDown(KEY_S)) gameData.camera.target.y += 10.0f * deltaTime;
 #pragma endregion
 
+	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+	int blockX = (int)floor(worldPos.x);
+	int blockY = (int)floor(worldPos.y);
+
+#pragma region block selection
+	ImGui::Begin("Block Selection");
+
+	ImGui::InputInt("Block Type", &gameData.selectedBlockType);
+
+	ImGui::End();
+#pragma endregion
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	{
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		
+		if (b)
+		{
+			*b = {};
+		}
+	}
+	else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+	{
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+
+		if (b)
+		{
+			b->type = gameData.selectedBlockType;
+		}
+	}
+
 	BeginMode2D(gameData.camera);
 
 	for (int y = 0; y < gameData.gameMap.height; ++y)
@@ -102,10 +138,19 @@ bool updateGame()
 		}
 	}
 
+	DrawTexturePro(
+		assetManager.frame,
+		{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height },	// source
+		{ (float)blockX, (float)blockY, 1, 1 },											// destination
+		{ 0, 0 },																		// origin (coordinates)
+		0.0f,																			// rotation
+		WHITE																			// tint
+	);
+
 	EndMode2D();
 
 	return true;
-}
+} 
 
 void closeGame()
 {
